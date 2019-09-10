@@ -5,12 +5,11 @@ import os
 
 # Full path to a folder that holds all of your DRs files.
 
-ARCHIVES ='/media/sf_Z_DRIVE/I2BC/kimberley.houenoussi/archives/test/'
-RESULTS_DIR = '/home/kimy/Stage/Pipeline/test'
-SCRIPT_DIR='/media/sf_P_DRIVE/Personnel/kimberley.houenoussi/Script'
+ARCHIVES =''
+RESULTS_DIR = ''
+SCRIPT_DIR=''
 
 # A Snakemake regular expression matching the forward mate FASTQ files.
-#ID, = glob_wildcards("/home/kimy/Stage/TestSnakemake/{id}/{id}.txt")
 (ID,ARCHIVE) = glob_wildcards(join(ARCHIVES,"{id, \d+}/{archive}.fastq.gz"))
 
 rule all:
@@ -47,14 +46,6 @@ rule all:
         expand(join(RESULTS_DIR,"{id}/{archive}/sens_archive.txt"),zip,id=ID,archive=ARCHIVE),
         expand(join(RESULTS_DIR,"{id}/{archive}/direction_result.txt"),zip,id=ID,archive=ARCHIVE)
 
-#rule archive :
-#    input:
-#        "archives_xan.csv"
-#    output:
-#		"{id}/{archive}.fastq.gz"
-#    shell :
-#        "python2 /home/kimy/Stage/Scripts/ascp_single.py {input} ./"
-
 rule bbduk:
     input:
         read=join(ARCHIVES,"{id}/{archive}.fastq.gz"),
@@ -78,7 +69,7 @@ rule script_contigs:
     input:
         spades=join(RESULTS_DIR,"{id}/{archive}/rnaspades/params.txt"),
         dr=join(RESULTS_DIR,"{id}/sequences_list.txt"),
-        Python_script_dr= join(SCRIPT_DIR,"liste_dr_format.py"),
+        Python_script_dr= join(SCRIPT_DIR,"sequences_list_format.py"),
         Python_script_contig=join(SCRIPT_DIR,"contigs_coverage.py"),
         bash_script=join(SCRIPT_DIR,"contigs.sh")
     output:
@@ -138,7 +129,7 @@ rule sens_input:
 		reads=join(RESULTS_DIR,"{id}/{archive}/{archive}.fq"),
 		dr=join(RESULTS_DIR,"{id}/sequences_list.txt"),
 		bbduk=join(RESULTS_DIR,"{id}/bbduk_log/{archive}.log"),
-		script_python=join(SCRIPT_DIR,"tableau_recap.py")
+		script_python=join(SCRIPT_DIR,"board.py")
 	output:
 		txt=join(RESULTS_DIR,"{id}/{archive}/{archive}.txt"),
 		tableau=join(RESULTS_DIR,"{id}/{archive}/{archive}.csv")
