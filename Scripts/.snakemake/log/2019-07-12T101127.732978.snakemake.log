@@ -1,4 +1,0 @@
-Building DAG of jobs...
-MissingInputException in line 58 of /media/sf_Equipes/SSFA/GPMS/commun/zzz_kimberley/Scripts/snakefile_pipeline:
-Missing input files for rule bbduk:
-/home/kimy/Stage/Pipeline/test/1492/sequences_list.txt
