@@ -1,0 +1,247 @@
+shell.executable("/bin/bash")
+
+from os.path import join
+import os
+
+# Full path to a folder that holds all of your DRs files.
+
+ARCHIVES =''
+RESULTS_DIR = ''
+SCRIPT_DIR=''
+
+# A Snakemake regular expression matching the forward mate FASTQ files.
+(ID,ARCHIVE) = glob_wildcards(join(ARCHIVES,"{id, \d+}/{archive}.fastq.gz"))
+
+rule all:
+	input:
+		#expand(join(RESULTS_DIR,"{id}/{archive}.fastq.gz"),zip, archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/{archive}_bbduk.fq"),zip, archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/rnaspades/params.txt"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.bwt"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.amb"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.ann"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.pac"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.sa"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.fai"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/{archive}.fq"),zip,archive=ARCHIVE, id=ID),
+		expand(join(RESULTS_DIR,"{id}/{archive}/{archive}.txt"),zip,archive=ARCHIVE,id=ID),
+		expand(join(RESULTS_DIR,"{id}/link.txt"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/link_fna.txt"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/link_gff.txt"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.gff.gz"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna.gz"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.gff"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.bed"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/{archive}_sample.fq"),zip,id=ID,archive=ARCHIVE),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna.bwt"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna.amb"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna.ann"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna.pac"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/genomic.fna.sa"),id=ID),
+        expand(join(RESULTS_DIR,"{id}/{archive}/aln_ref.sam"),zip,id=ID,archive=ARCHIVE),
+        expand(join(RESULTS_DIR,"{id}/{archive}/aln_test.sam"),zip,id=ID,archive=ARCHIVE),
+        expand(join(RESULTS_DIR,"{id}/{archive}/rseqc_results.txt"),zip,id=ID,archive=ARCHIVE),
+        expand(join(RESULTS_DIR,"{id}/{archive}/sens_archive.txt"),zip,id=ID,archive=ARCHIVE),
+        expand(join(RESULTS_DIR,"{id}/{archive}/direction_result.txt"),zip,id=ID,archive=ARCHIVE)
+
+rule bbduk:
+    input:
+        read=join(ARCHIVES,"{id}/{archive}.fastq.gz"),
+        Dr=join(RESULTS_DIR,"{id}/sequences_list.txt")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/{archive}_bbduk.fq")
+    threads:2
+	log:
+		join(RESULTS_DIR,"{id}/bbduk_log/{archive}.log")
+	shell:
+	    "bbduk.sh in={input.read} outm={output} hdist=1 mm=f ref={input.Dr} k=19 minlen=1 forbidn=t 2>{log}"
+rule spade:
+    input:
+        fq=join(RESULTS_DIR,"{id}/{archive}/{archive}_bbduk.fq"),
+        bash_script=join(SCRIPT_DIR,"rnaspades.sh")
+    output:
+        spades=join(RESULTS_DIR,"{id}/{archive}/rnaspades/params.txt")
+    shell:
+        "bash {input.bash_script} {input.fq} {RESULTS_DIR} {wildcards.id} {wildcards.archive}"
+rule script_contigs:
+    input:
+        spades=join(RESULTS_DIR,"{id}/{archive}/rnaspades/params.txt"),
+        dr=join(RESULTS_DIR,"{id}/sequences_list.txt"),
+        Python_script_dr= join(SCRIPT_DIR,"sequences_list_format.py"),
+        Python_script_contig=join(SCRIPT_DIR,"contigs_coverage.py"),
+        bash_script=join(SCRIPT_DIR,"contigs.sh")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta")
+    shell:
+        """
+        python3 {input.Python_script_dr} {input.dr}
+        bash {input.bash_script} {input.Python_script_contig} {input.dr} {RESULTS_DIR}/{wildcards.id}/{wildcards.archive}/rnaspades/transcripts.fasta {RESULTS_DIR} {wildcards.id} {wildcards.archive} {output}
+        """
+rule bwa_i :
+    input:
+        join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta")
+    output :
+        bwt=temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.bwt")),
+        amb=temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.amb")),
+        ann=temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.ann")),
+        pac=temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.pac")),
+        sa=temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.sa"))
+    shell:
+        "bwa index {input}"
+rule fai:
+    input:
+        bwt=join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.bwt"),
+        fasta=join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta"),
+        script_bash=join(SCRIPT_DIR,"fai.sh")
+    output:
+        temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.fai"))
+    shell:
+        "bash {input.script_bash} {input.fasta} {RESULTS_DIR} {wildcards.id} {wildcards.archive}"
+rule bwa:
+    input:
+        index=join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta"),
+        fastq=join(RESULTS_DIR,"{id}/{archive}/{archive}_bbduk.fq"),
+        fai=join(RESULTS_DIR,"{id}/{archive}/CRISPR_contigs.fasta.fai"),
+        script_bash=join(SCRIPT_DIR,"aln.sh")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/aln.sam")
+    shell:
+        "bash {input.script_bash} {input.index} {input.fastq} {input.fai} {RESULTS_DIR} {wildcards.id} {wildcards.archive} {output}"
+rule CRISPR_reads_name :
+    input:
+        join(RESULTS_DIR,"{id}/{archive}/aln.sam")
+    output:
+        temp(join(RESULTS_DIR,"{id}/{archive}/CRISPR_reads_name.txt"))
+    shell:
+        "cut -f1 {input} > {output}"
+rule CRISPR_reads:
+    input:
+        fastq=join(RESULTS_DIR,"{id}/{archive}/{archive}_bbduk.fq"),
+        names=join(RESULTS_DIR,"{id}/{archive}/CRISPR_reads_name.txt")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/{archive}.fq")
+    shell:
+        "seqtk subseq {input.fastq} {input.names} > {output}"
+rule sens_input:
+	input:
+		reads=join(RESULTS_DIR,"{id}/{archive}/{archive}.fq"),
+		dr=join(RESULTS_DIR,"{id}/sequences_list.txt"),
+		bbduk=join(RESULTS_DIR,"{id}/bbduk_log/{archive}.log"),
+		script_python=join(SCRIPT_DIR,"board.py")
+	output:
+		txt=join(RESULTS_DIR,"{id}/{archive}/{archive}.txt"),
+		tableau=join(RESULTS_DIR,"{id}/{archive}/{archive}.csv")
+	shell:
+		"python3 {input.script_python} {input.reads} {input.dr} 19 {input.bbduk} {output.tableau}"
+rule link:
+    input:
+        csv=join(SCRIPT_DIR,"assembly.csv"),
+        python=join(SCRIPT_DIR,"link.py")
+    output :
+        temp(join(RESULTS_DIR,"{id}/link.txt"))
+    shell :
+        "python3 {input.python} {wildcards.id} {input.csv}  {RESULTS_DIR}/{wildcards.id}"
+rule full_link:
+    input:
+        link=join(RESULTS_DIR,"{id}/link.txt"),
+        awk_fna=join(SCRIPT_DIR,"full_link_fna.awk"),
+        awk_gff=join(SCRIPT_DIR,"full_link_gff.awk")
+    output:
+        fna=temp(join(RESULTS_DIR,"{id}/link_fna.txt")),
+        gff=temp(join(RESULTS_DIR,"{id}/link_gff.txt"))
+    shell :
+        """
+        awk -f {input.awk_fna}< {input.link} > {output.fna}
+        awk -f {input.awk_gff}< {input.link} > {output.gff}
+        """
+rule dl:
+    input:
+        fna=join(RESULTS_DIR,"{id}/link_fna.txt"),
+        gff=join(RESULTS_DIR,"{id}/link_gff.txt")
+    output:
+        fna=temp(join(RESULTS_DIR,"{id}/genomic.fna.gz")),
+        gff=temp(join(RESULTS_DIR,"{id}/genomic.gff.gz"))
+    shell :
+        """
+        wget -i {input.fna} -O {RESULTS_DIR}/{wildcards.id}/genomic.fna.gz
+        wget -i {input.gff} -O {RESULTS_DIR}/{wildcards.id}/genomic.gff.gz
+        """
+rule gunzip :
+    input:
+        gff=join(RESULTS_DIR,"{id}/genomic.gff.gz"),
+        fna=join(RESULTS_DIR,"{id}/genomic.fna.gz")
+    output:
+        gff=join(RESULTS_DIR,"{id}/genomic.gff"),
+        fna=join(RESULTS_DIR,"{id}/genomic.fna")
+    shell:
+        """
+        gunzip -c {input.gff} > {output.gff}
+        gunzip -c {input.fna} > {output.fna}
+        """
+rule extension :
+    input:
+        join(RESULTS_DIR,"{id}/genomic.gff")
+    output:
+        temp(join(RESULTS_DIR,"{id}/genomic.bed"))
+    shell :
+        "convert2bed -i gff < {input} > {output}"
+rule sample :
+    input:
+        join(ARCHIVES,"{id}/{archive}.fastq.gz")
+    output:
+        temp(join(RESULTS_DIR,"{id}/{archive}_sample.fq"))
+    shell:
+        "seqtk sample -s100 {input} 500000 > {output}"
+rule control_bwa_i:
+    input:
+        join(RESULTS_DIR,"{id}/genomic.fna")
+    output:
+        bwt=temp(join(RESULTS_DIR,"{id}/genomic.fna.bwt")),
+        amb=temp(join(RESULTS_DIR,"{id}/genomic.fna.amb")),
+        ann=temp(join(RESULTS_DIR,"{id}/genomic.fna.ann")),
+        pac=temp(join(RESULTS_DIR,"{id}/genomic.fna.pac")),
+        sa=temp(join(RESULTS_DIR,"{id}/genomic.fna.sa"))
+    shell:
+        "bwa index {input}"
+rule control_bwa:
+    input:
+        bwt=join(RESULTS_DIR,"{id}/genomic.fna.bwt"),
+        fna=join(RESULTS_DIR,"{id}/genomic.fna"),
+        fq=join(RESULTS_DIR,"{id}/{archive}_sample.fq")
+    output:
+        aln=join(RESULTS_DIR,"{id}/{archive}/aln_ref.sam"),
+        testaln=temp(join(RESULTS_DIR,"{id}/{archive}/aln_test.sam"))
+    shell:
+        """
+        bwa mem {input.fna} {input.fq} > {output.aln}
+        samtools view -q 30 {output.aln} > {output.testaln}
+
+        """
+rule rseqc:
+    input:
+        bed=join(RESULTS_DIR,"{id}/genomic.bed"),
+        aln=join(RESULTS_DIR,"{id}/{archive}/aln_ref.sam"),
+        testaln=join(RESULTS_DIR,"{id}/{archive}/aln_test.sam"),
+        script_bash=join(SCRIPT_DIR,"rseqc.sh")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/rseqc_results.txt")
+    shell:
+        "bash {input.script_bash} {input.testaln} {input.aln} {input.bed} {output} {RESULTS_DIR} {wildcards.id} {wildcards.archive}"
+rule rseqc_results:
+    input:
+        join(RESULTS_DIR,"{id}/{archive}/rseqc_results.txt")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/sens_archive.txt")
+    shell:
+        "python3 {SCRIPT_DIR}/RseqC.py {input}"
+
+rule orientation:
+    input:
+        rseqc=join(RESULTS_DIR,"{id}/{archive}/sens_archive.txt"),
+        tableau=join(RESULTS_DIR,"{id}/{archive}/{archive}.csv")
+    output:
+        join(RESULTS_DIR,"{id}/{archive}/direction_result.txt")
+    shell:
+        "python3 {SCRIPT_DIR}/orientation.py {input.rseqc} {input.tableau} {wildcards.archive} {RESULTS_DIR}/{wildcards.id}"
