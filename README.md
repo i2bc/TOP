@@ -5,7 +5,7 @@
 - Christine Pourcel (<christine.pourcel@u-psud.fr>)
 - Jean-Philippe Vernadet (<jean-philippe.vernadet@laposte.net>)
 
-The TOP (Transcript Orientation Pipeline) pipeline was initially designed to determine the orientation of CRISPR sequences from transcripts from high throughput sequencing. However, it could be used to determine the orientation of any sequence of interest.
+The TOP (Transcript Orientation Pipeline) pipeline was initially designed to determine the orientation of CRISPR sequences from transcripts from high throughput sequencing. This pipeline would improve the database [CRISPRCasdb]. However, it could be used to determine the orientation of any sequence of interest.
 
 ## Installation
 
@@ -46,4 +46,4 @@ snakemake
 
 ## Results/Output
 
-
+[CRISPRCasdb]: https://crisprcas.i2bc.paris-saclay.fr/
