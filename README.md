@@ -20,7 +20,7 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh;
 * TOP environment and scripts
 ```bash
 # Clone or download files
-git clone https://github.com/i2bc/b2forensics.git
+git clone https://github.com/i2bc/TOP.git
 ```
 
 ```bash
