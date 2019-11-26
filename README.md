@@ -81,8 +81,7 @@ snakemake
 |  OutputFileName | Description  |
 |---|---|
 | ```Results.csv```  |  Contains all the results from all SampleID.csv from the TaxId directory. |
-| ```SampleId.csv```  |  Contains the final results summary of a sample. Output format is a csv with the following columns: ```Tax ID	Archive's name	Repeat sequence	Number of CRISPR reads in archive	% reads CRISPR in archive	Number of reads in input sens 	% reads in input direction 	Number of reads in reverse input direction 	% reads in reverse input sens	Repeat sens in archive	p-value	% Reads ++ in archive (RseqC)	% Reads +- in archive (RseqC)	Archive direction	Repeat direction
-``` |
+| ```SampleId.csv```  |  Contains the final results summary of a sample. Output format is a csv with the following columns: ```Tax ID	Archive's name	Repeat sequence	Number of CRISPR reads in archive	% reads CRISPR in archive	Number of reads in input sens 	% reads in input direction 	Number of reads in reverse input direction 	% reads in reverse input sens	Repeat sens in archive	p-value	% Reads ++ in archive (RseqC)	% Reads +- in archive (RseqC)	Archive direction	Repeat direction``` |
 
 
 
