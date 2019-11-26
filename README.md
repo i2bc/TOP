@@ -48,6 +48,7 @@ snakemake
 
 ### Structure of the output directory
 
+```
 ├── Output
     ├── TaxId_1
     |	├── bbduk_log
@@ -75,6 +76,7 @@ snakemake
     |
     ├── TaxId_2
     ├── TaxId...
+```
 
 ## Description of result/output files
 
@@ -89,7 +91,7 @@ snakemake
 
 |  ScriptName | Description  |
 |---|---|
-| ```aln.sh```  |  aligns reads of interest with contigs of interest and then filters that do not match. |
+| ```aln.sh```  |  Aligns reads of interest with contigs of interest and then filters that do not match. |
 |  assembly.csv | Table contains metadatas from RefSeq assemblies.  |
 | board.py  |  Builds the final results table. |
 | contigs.sh  |Create an empty assemly rnaspades file if rnaspades failed.   |
