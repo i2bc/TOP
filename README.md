@@ -84,8 +84,9 @@ snakemake
 |---|---|
 | ```Results.csv```  |  Contains all the results from all SampleID.csv from the TaxId directory. |
 | ```SampleId.csv```  |  Contains the final results summary of a sample. Output format is a csv with the following columns: ```Tax ID	Archive's name	Repeat sequence	Number of CRISPR reads in archive	% reads CRISPR in archive	Number of reads in input sens 	% reads in input direction 	Number of reads in reverse input direction 	% reads in reverse input sens	Repeat sens in archive	p-value	% Reads ++ in archive (RseqC)	% Reads +- in archive (RseqC)	Archive direction	Repeat direction``` |
-
-
+| ```genomic.fna```  |  The assembly of reference genome or representative genome in fasta format.|
+|```genomic.gff``` | Annotation file of reference genome or representative genome in gff format. |
+|```CRISPR_contigs.fasta```|Contigs build with ```rnaspades.py``` from bbduk.sk output sequence of interest and filtered by the script ```contigs_coverage.py```|
 
 ## Description of scripts and TOP files
 
