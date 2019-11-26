@@ -44,25 +44,66 @@ Launch your TOP pipeline
 snakemake
 ```
 
-## Results/Output
+## Result/Output files
+
+### Structure of the output directory
+
+├── Output
+    ├── TaxId_1
+    |	├── bbduk_log
+    |	|	├── SampleId_1.log
+    |	|	├── SampleId_2.log
+    |	|	├── SampleId_....log        
+    |	├── SampleId_1
+    |	|	├──	rnaspades
+    |	|	├── aln.sam
+    |	|	├── aln_ref.sam
+    |	|	├── CRISPR_contigs.fasta
+    |	|	├── direction_result.txt
+    |	|	├── rseqc_results.txt
+    |	|	├── sens_archive.txt
+    |	|	├── SampleId_1.csv
+    |	|	├── SampleId_1.fq
+    |	|	├── SampleId_1.txt
+    |	|	├── SampleId_1_bbduk.fq
+    |	├── SampleId_2
+    |	├── SampleId...
+    |	├── genomic.fna
+    |	├── genomic.gff
+    |	├── Results.csv
+    |	├── sequences_list.txt
+    |
+    ├── TaxId_2
+    ├── TaxId...
+
+## Description of result/output files
+
+|  OutputFileName | Description  |
+|---|---|
+| ```Results.csv```  |  Contains all the results from all SampleID.csv from the TaxId directory. |
+| ```SampleId.csv```  |  Contains the final results summary of a sample. Output format is a csv with the following columns: ```Tax ID	Archive's name	Repeat sequence	Number of CRISPR reads in archive	% reads CRISPR in archive	Number of reads in input sens 	% reads in input direction 	Number of reads in reverse input direction 	% reads in reverse input sens	Repeat sens in archive	p-value	% Reads ++ in archive (RseqC)	% Reads +- in archive (RseqC)	Archive direction	Repeat direction
+``` |
+
+
 
 ## Description of scripts and TOP files
 
 |  ScriptName | Description  |
 |---|---|
 | ```aln.sh```  |  aligns reads of interest with contigs of interest and then filters that do not match. |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-|   |   |
-
+|  assembly.csv | Table contains metadatas from RefSeq assemblies.  |
+| board.py  |  Builds the final results table. |
+| contigs.sh  |Create an empty assemly rnaspades file if rnaspades failed.   |
+|  contigs_coverage.py | Filters assembly contigs by coverage rnaspades results.  |
+| fai.sh  |  Index contigs of sequences of interest. |
+| full_link_fna.awk  | Builds the full link to genome reference file.  |
+| full_link_gff.awk  | Builds the full link to the annotation associated with reference genome.  |
+|  link.py | Builds link to genome reference file.  |
+| orientation.py  | Orientation results of the sequence of interest.  |
+| rnaspades.sh  | Launches ```rnaspades.py``` to build contigs of sequence of interest. Creates empty file if there is an empty file in input. |
+| RseqC.py  | Filters results from RseqC  |
+| rseqc.sh  | Launches ```infer_experiment.py``` from RseqC to orientate archive |
+| sequences_list_format.py  | Reformat sequence of interest in input (lower to uppercase ...)  |
+| Snakefile  | File input used by ```snakemake```  |
+| TOP.yaml  | File used by ```conda``` to build the TOP environment  |
 
