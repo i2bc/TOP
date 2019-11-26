@@ -46,4 +46,23 @@ snakemake
 
 ## Results/Output
 
-[CRISPRCasdb]: https://crisprcas.i2bc.paris-saclay.fr/
+## Description of scripts and TOP files
+
+|  ScriptName | Description  |
+|---|---|
+| ```aln.sh```  |  aligns reads of interest with contigs of interest and then filters that do not match. |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+|   |   |
+
+
